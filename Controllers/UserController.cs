@@ -43,5 +43,19 @@ namespace user_manager_backend.Controllers
 
             return await _context.Users.ToListAsync();
         }
+
+        [HttpPost]
+        public async Task<ActionResult<User>> CreateUser(User user)
+        {
+            if (_context.Users == null)
+            {
+                return NotFound();
+            }
+
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
+        }
     }
 }
