@@ -62,5 +62,10 @@ namespace user_manager_backend.Controllers
 
             return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
         }
+
+        private bool UserExists(int id)
+        {
+            return (_context.Users?.Any(e => e.Id == id)).GetValueOrDefault();
+        }
     }
 }
