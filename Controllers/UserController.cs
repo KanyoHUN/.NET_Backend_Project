@@ -32,5 +32,16 @@ namespace user_manager_backend.Controllers
 
             return user;
         }
+
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<User>>> GetUsers()
+        {
+            if (_context.Users == null)
+            {
+                return NotFound();
+            }
+
+            return await _context.Users.ToListAsync();
+        }
     }
 }
