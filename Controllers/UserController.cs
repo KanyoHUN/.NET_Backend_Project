@@ -34,11 +34,16 @@ namespace user_manager_backend.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<User>>> GetUsers()
+        public async Task<ActionResult<IEnumerable<User>>> GetUsers([FromQuery] string? name)
         {
             if (_context.Users == null)
             {
                 return NotFound();
+            }
+
+            if (name != null)
+            {
+                return await _context.Users.Where(user => user.Name == name).ToListAsync();
             }
 
             return await _context.Users.ToListAsync();
