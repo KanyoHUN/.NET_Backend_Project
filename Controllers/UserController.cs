@@ -8,22 +8,22 @@ namespace user_manager_backend.Controllers
     [ApiController]
     public class UserController : Controller
     {
-        private readonly UserDbContext _context;
+        private readonly UserService _service;
 
         public UserController(UserDbContext context)
         {
-            _context = context;
+            _service = new UserService(this.ModelState, context);
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<User>> GetUser(int id)
         {
-            if (_context.Users == null)
+            if (_service.CheckDbContext())
             {
                 return NotFound();
             }
 
-            var user = await _context.Users.FindAsync(id);
+            var user = await _service.ReturnUser(id);
 
             if (user == null)
             {
@@ -36,29 +36,28 @@ namespace user_manager_backend.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<User>>> GetUsers([FromQuery] string? name)
         {
-            if (_context.Users == null)
+            if (_service.CheckDbContext())
             {
                 return NotFound();
             }
 
             if (name != null)
             {
-                return await _context.Users.Where(user => user.Name == name).ToListAsync();
+                return await _service.ListFilteredUsers(name);
             }
 
-            return await _context.Users.ToListAsync();
+            return await _service.ListUsers();
         }
 
         [HttpPost]
-        public async Task<ActionResult<User>> CreateUser(User user)
+        public async Task<ActionResult<User>> CreateUser(User user) //To be modified with validation
         {
-            if (_context.Users == null)
+            if (_service.CheckDbContext())
             {
                 return NotFound();
             }
 
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
+            await _service.CreateUser(user);
 
             return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
         }
@@ -71,15 +70,15 @@ namespace user_manager_backend.Controllers
                 return BadRequest();
             }
 
-            _context.Entry(user).State = EntityState.Modified;
+            _service.ModifyUser(user);
 
             try
             {
-                await _context.SaveChangesAsync();
+                await _service.SaveCahngesAsyncService();
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!UserExists(id))
+                if (!_service.UserExists(id))
                 {
                     return NotFound();
                 }
@@ -95,27 +94,21 @@ namespace user_manager_backend.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
-            if (_context.Users == null)
+            if (_service.CheckDbContext())
             {
                 return NotFound();
             }
 
-            var user = await _context.Users.FindAsync(id);
+            var user = await _service.ReturnUser(id);
 
             if (user == null)
             {
                 return NotFound();
             }
 
-            _context.Users.Remove(user);
-            await _context.SaveChangesAsync();
+            await _service.RemoveUser(user);
 
             return NoContent();
-        }
-
-        private bool UserExists(int id)
-        {
-            return (_context.Users?.Any(e => e.Id == id)).GetValueOrDefault();
         }
     }
 }
