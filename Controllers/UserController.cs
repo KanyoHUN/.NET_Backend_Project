@@ -50,22 +50,30 @@ namespace user_manager_backend.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<User>> CreateUser(User user) //To be modified with validation
+        public async Task<ActionResult<User>> CreateUser(User user)
         {
             if (_service.CheckDbContext())
             {
                 return NotFound();
             }
 
-            await _service.CreateUser(user);
+            if (await _service.CreateUser(user))
+            {
+                return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
+            }
 
-            return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
+            return BadRequest();
         }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUser(int id, User user)
         {
             if (id != user.Id)
+            {
+                return BadRequest();
+            }
+
+            if (!_service.ValidateUser(user))
             {
                 return BadRequest();
             }

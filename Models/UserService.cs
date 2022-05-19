@@ -15,9 +15,34 @@ namespace user_manager_backend.Models
             _context = context;
         }
 
-        protected bool ValidateUser(User userToValidate)
+        public bool ValidateUser(User userToValidate)
         {
-            //Validation Logic will be here
+            HashSet<string> sexes = new HashSet<string>();
+            sexes.Add("Male");
+            sexes.Add("Female");
+
+            if (userToValidate.Age < 1 | userToValidate.Age > 110)
+            {
+                _modelstate.AddModelError("Age", "Age cannot be outside of [1;110]");
+            }
+
+            if (userToValidate.Sex != null)
+            {
+                if (!sexes.Contains(userToValidate.Sex))
+                {
+                    _modelstate.AddModelError("Sex", "Sex has only two options! (Male,Female)");
+                }
+            }
+            else
+            {
+                _modelstate.AddModelError("Sex", "Sex is required!");
+            }
+
+            if(userToValidate.Name == null | userToValidate.Name == "")
+            {
+                _modelstate.AddModelError("Name", "Name is required!");
+            }
+
             return _modelstate.IsValid;
         }
 
@@ -48,11 +73,24 @@ namespace user_manager_backend.Models
             return user;
         }
         
-        public async Task<int> CreateUser(User userToBeCreated) //To be modified with validation
+        public async Task<bool> CreateUser(User userToBeCreated)
         {
-            _context.Users.Add(userToBeCreated);
-            await SaveCahngesAsyncService();
-            return 0;
+            if (!ValidateUser(userToBeCreated))
+            {
+                return false;
+            }
+
+            try
+            {
+                _context.Users.Add(userToBeCreated);
+                await SaveCahngesAsyncService();
+            }
+            catch
+            {
+                return false;
+            }
+
+            return true;
         }
 
         public async Task<int> RemoveUser(User userToBeRemoved)
