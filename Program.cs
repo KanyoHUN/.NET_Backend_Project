@@ -7,7 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddDbContext<UserDbContext>(opt =>
-    opt.UseInMemoryDatabase("UserList"));
+    opt.UseSqlite("Name=UserDb"));
 
 var app = builder.Build();
 
